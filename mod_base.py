@@ -204,10 +204,10 @@ class ModuleBase(PluginModuleBase):
                 return name_length
 
             def add_text(msg):
-                F.socketio.emit("command_modal_add_text", msg, namespace='/framework', broadcast=True)
+                F.socketio.emit("command_modal_add_text", msg, namespace='/framework', to='all')
             
-            F.socketio.emit("command_modal_clear", None, namespace='/framework', broadcast=True)
-            F.socketio.emit("command_modal_show", 'EPG 매칭', namespace='/framework', broadcast=True)
+            F.socketio.emit("command_modal_clear", None, namespace='/framework', to='all')
+            F.socketio.emit("command_modal_show", 'EPG 매칭', namespace='/framework', to='all')
             add_text('EPG 매칭을 시작합니다.\n\n')
 
             ch_list = ModelHDHomerunChannel.channel_list()
