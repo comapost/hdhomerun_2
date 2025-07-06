@@ -192,7 +192,6 @@ class ModelHDHomerunChannel(ModelBase):
                 with F.app.app_context():
                     data = cls.channel_list(only_use=True)
                 ddns = F.SystemModelSetting.get('ddns')
-                logger.debug(time.time())
                 for c in data:
                     ins = None
                     if c.match_epg_name !='':
@@ -206,7 +205,6 @@ class ModelHDHomerunChannel(ModelBase):
                         url = c.url_trans
                     m3u.append(M3U_FORMAT % (c.id, c.scan_name, c.ch_number, (ins.icon if ins is not None else ""), c.group_name, c.scan_name))
                     m3u.append(url)
-                logger.debug(time.time())
                 SupportFile.write_file(m3ufilepath, '\n'.join(m3u))
             return SupportFile.read_file((m3ufilepath))
             
