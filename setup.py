@@ -7,7 +7,7 @@ setting = {
     'home_module': None,
     'menu': {
         'uri': __package__,
-        'name': 'HDHomerun',
+        'name': 'HDHomerun_2',
         'list': [
             {
                 'uri': 'base/setting',
