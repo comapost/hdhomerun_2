@@ -6,7 +6,7 @@ setting = {
     'use_default_setting': True,
     'home_module': None,
     'menu': {
-        'uri': __package__,
+        'uri': 'hdhomerun_2',
         'name': 'HDHomerun_2',
         'list': [
             {
