@@ -50,7 +50,8 @@ class ModuleBase(PluginModuleBase):
                 arg['play_title'] = request.form['play_title']
                 arg['play_source_src'] = request.form['play_source_src']
                 arg['play_source_type'] = request.form['play_source_type']
-            return render_template(f'{self.P.package_name}_{self.name}_{page}.html', arg=arg)
+                # 패키지명을 "hdhomerun_2"로 직접 박아버립니다.
+                return render_template(f'hdhomerun_2_{self.name}_{page}.html', arg=arg)
         except Exception as e:
             logger.error(f"Exception:{str(e)}")
             logger.error(traceback.format_exc())
