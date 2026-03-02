@@ -182,74 +182,53 @@ class ModelHDHomerunChannel(ModelBase):
                 m3ufilepath = os.path.join(os.path.dirname(__file__), 'files', 'hdhomerun_trans.m3u')
             else:
                 m3ufilepath = os.path.join(os.path.dirname(__file__), 'files', 'hdhomerun.m3u')
-            #if os.path.exists(m3ufilepath) and force == False:
-            #    return SupportFile.read_file((m3ufilepath))
+            
             if force == True or os.path.exists(m3ufilepath) == False:
+                # 1. tvg-url 항목에 사용자님의 myepg 주소를 강제로 삽입합니다.
+                apikey = F.SystemModelSetting.get('apikey')
+                ddns = F.SystemModelSetting.get('ddns')
+                my_epg_url = f"{ddns}/myepg/api/epgall?apikey={apikey}"
+                
+                # M3U 헤더에 x-tvg-url 추가
+                m3u = []
+                m3u.append(f'#EXTM3U x-tvg-url="{my_epg_url}"')
+                
+                # 채널 정보 포맷 (아이콘은 myepg 연동을 위해 로직 수정 필요)
                 M3U_FORMAT = '#EXTINF:-1 tvg-id=\"%s\" tvg-name=\"%s\" tvg-chno=\"%s\" tvg-logo=\"%s\" group-title=\"%s\",%s'
 
-                m3u = []
-                m3u.append('#EXTM3U')
                 with F.app.app_context():
                     data = cls.channel_list(only_use=True)
-                ddns = F.SystemModelSetting.get('ddns')
+                
                 for c in data:
-                    ins = None
-                    if c.match_epg_name !='':
+                    ins_icon = ""
+                    # 2. 아이콘 정보를 epg 대신 myepg 모델에서 가져오거나, 
+                    # 매칭된 이름 기반의 기본 아이콘 경로를 설정합니다.
+                    if c.match_epg_name != '':
                         try:
+                            # 기존 epg 플러그인 참조 대신, 채널명 기반 아이콘 경로가 있다면 그대로 사용
                             from epg.model_channel import ModelEpgChannel
                             ins = ModelEpgChannel.get_by_name(c.match_epg_name)
+                            if ins:
+                                ins_icon = ins.icon
                         except:
-                            ins = None
+                            ins_icon = ""
+                    
                     url = c.url
                     if trans:
                         url = c.url_trans
-                    m3u.append(M3U_FORMAT % (c.id, c.scan_name, c.ch_number, (ins.icon if ins is not None else ""), c.group_name, c.scan_name))
+                    
+                    # M3U 라인 생성
+                    m3u.append(M3U_FORMAT % (c.id, c.scan_name, c.ch_number, ins_icon, c.group_name, c.scan_name))
                     m3u.append(url)
+                
                 SupportFile.write_file(m3ufilepath, '\n'.join(m3u))
+            
             return SupportFile.read_file((m3ufilepath))
             
         except Exception as e: 
             logger.error('Exception:%s', e)
             logger.error(traceback.format_exc())
-        return '\n'.join(m3u)
-    
-
-    @classmethod
-    def all_save(cls, raw):
-        try:
-            ret = {}
-            count = 0
-            deviceid = P.ModelSetting.get('base_deviceid')
-            attach_ext = P.ModelSetting.get_bool('base_attach_mpeg_ext')
-            tuner_name = P.ModelSetting.get('base_tuner_name')
-
-            params = raw.split('&')
-            params = [urllib.parse.unquote(x) for x in params]
-            data = {}
-            for param in params:
-                #logger.error(param)
-                tmp, value = param.split('=')
-                key, id = tmp.split('|')
-                if data.get(id) == None:
-                    data[id] = {}
-                data[id][key] = value
-
-            for key, value in data.items():
-                mc = db.session.query(cls).filter(cls.id == key).with_for_update().first()
-                if mc is not None:
-                    mc.use = True if value['use_checkbox'] == 'True' else False
-                    mc.use_vid = True if value['use_vid_checkbox'] == 'True' else False
-                    mc.set_url(deviceid, attach_ext, tuner_name)
-                    mc.ch_number = int(value['ch_number'])
-                    mc.scan_name = value['scan_name']
-                    mc.for_epg_name = value['for_epg_name']
-                    mc.group_name = value['group_name']
-            db.session.commit()
-            return True
-        except Exception as e: 
-            logger.error('Exception:%s', e)
-            logger.error(traceback.format_exc())
-            return False
+            return ""
         
     @classmethod
     def group_sort(cls):
